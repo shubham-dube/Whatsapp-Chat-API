@@ -1,21 +1,24 @@
 const express = require("express");
-const body_parser = require("body-parser");
+const bodyParser = require("body-parser");
 const axios = require("axios");
 require('dotenv').config();
 
-const app = express().use(body_parser.json());
+const app = express().use(bodyParser.json());
 const token = process.env.TOKEN;
 const mytoken = process.env.MYTOKEN;
 
-app.listen(8000 || process.env.PORT, () => {
-    console.log("Webhook is listening");
+// Default port setup
+const PORT = process.env.PORT || 8000;
+
+app.listen(PORT, () => {
+    console.log(`Webhook is listening on port ${PORT}`);
 });
 
 // To verify the callback URL from dashboard side (cloud API side)
 app.get("/webhook", (req, res) => {
-    let mode = req.query["hub.mode"];
-    let challenge = req.query["hub.challenge"];
-    let token = req.query["hub.verify_token"];
+    const mode = req.query["hub.mode"];
+    const challenge = req.query["hub.challenge"];
+    const token = req.query["hub.verify_token"];
 
     if (mode && token) {
         if (mode === "subscribe" && token === mytoken) {
@@ -29,17 +32,18 @@ app.get("/webhook", (req, res) => {
 });
 
 app.post("/webhook", (req, res) => {
-    let bodyParam = req.body;
+    const bodyParam = req.body;
     console.log(JSON.stringify(bodyParam, null, 2));
+    
     if (bodyParam.object) {
         if (bodyParam.entry &&
             bodyParam.entry[0].changes &&
             bodyParam.entry[0].changes[0].value.messages &&
             bodyParam.entry[0].changes[0].value.messages[0]
         ) {
-            let phoneNumberId = bodyParam.entry[0].changes[0].value.metadata.phone_number_id;
-            let from = bodyParam.entry[0].changes[0].value.messages[0].from;
-            let messageBody = bodyParam.entry[0].changes[0].value.messages[0].text.body;
+            const phoneNumberId = bodyParam.entry[0].changes[0].value.metadata.phone_number_id;
+            const from = bodyParam.entry[0].changes[0].value.messages[0].from;
+            const messageBody = bodyParam.entry[0].changes[0].value.messages[0].text.body;
 
             axios({
                 method: "POST",
@@ -54,9 +58,11 @@ app.post("/webhook", (req, res) => {
                 headers: {
                     "Content-Type": "application/json"
                 }
-            }).then(response => {
+            })
+            .then(response => {
                 console.log("Message sent successfully");
-            }).catch(error => {
+            })
+            .catch(error => {
                 console.error("Error sending message:", error);
             });
 

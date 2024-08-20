@@ -1,8 +1,0 @@
-[build]
-  functions = "functions" # Source directory for your Netlify functions
-  publish = "build" # Directory to publish (adjust this to your build directory if needed)
-
-[functions]
-  directory = "netlify/functions" # Directory where the built functions will be placed
-
- 

@@ -63,8 +63,9 @@ app.post("/webhook", (req, res) => {
                 }
             })
             .then(response => {
-                console.log("Message sent successfully:", response.data.entry);
-                res.send(response.data.entry);
+                console.log("HI");
+                // console.log("Message sent successfully:", response.data.entry);
+                // res.send(response.data.entry);
             })
             .catch(error => {
                 console.error("Error sending message:", error);

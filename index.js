@@ -64,11 +64,12 @@ app.post("/webhook", (req, res) => {
             })
             .then(response => {
                 console.log("Message sent successfully:", response.data);
+                res.send(response.data);
             })
             .catch(error => {
                 console.error("Error sending message:", error);
             });
-
+        
             res.sendStatus(200);
         } else {
             res.sendStatus(404);

@@ -2,10 +2,6 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const axios = require("axios");
 require('dotenv').config();
-const express = require("express");
-const bodyParser = require("body-parser");
-const axios = require("axios");
-require('dotenv').config();
 
 const app = express().use(bodyParser.json());
 const token = process.env.TOKEN;
@@ -81,71 +77,4 @@ app.post("/webhook", (req, res) => {
 
 app.get("/", (req, res) => {
     res.status(200).send("Hello, this is the webhook setup");
-});
-
-const app = express();
-const PORT = process.env.PORT || 8000;
-const token = process.env.TOKEN;
-const mytoken = process.env.MYTOKEN;
-
-// Middleware setup
-app.use(bodyParser.json());
-app.use(express.static('public')); // Serve static files from the 'public' directory
-
-// Start the server
-app.listen(PORT, () => {
-    console.log(`Webhook is listening on port ${PORT}`);
-});
-
-// Verification for the callback URL from the dashboard
-app.get("/webhook", (req, res) => {
-    const mode = req.query["hub.mode"];
-    const challenge = req.query["hub.challenge"];
-    const token = req.query["hub.verify_token"];
-
-    if (mode && token) {
-        if (mode === "subscribe" && token === mytoken) {
-            res.status(200).send(challenge);
-        } else {
-            res.status(403).send("Forbidden");
-        }
-    } else {
-        res.status(400).send("Bad Request");
-    }
-});
-
-// Handle incoming webhook events
-app.post("/webhook", (req, res) => {
-    const bodyParam = req.body;
-    console.log(JSON.stringify(bodyParam, null, 2));
-    
-    if (bodyParam.object) {
-        if (bodyParam.entry &&
-            bodyParam.entry[0].changes &&
-            bodyParam.entry[0].changes[0].value.messages &&
-            bodyParam.entry[0].changes[0].value.messages[0]
-        ) {
-            const phoneNumberId = bodyParam.entry[0].changes[0].value.metadata.phone_number_id;
-            const from = bodyParam.entry[0].changes[0].value.messages[0].from;
-            const messageBody = bodyParam.entry[0].changes[0].value.messages[0].text.body;
-
-            // Respond with JSON that includes the message data
-            res.status(200).json({ 
-                status: "success", 
-                message: "message sent",  
-                body: `Hi! I'm Prasath. Your message is: ${messageBody}`, 
-                from: `${from}` 
-            });
-            
-        } else {
-            res.sendStatus(404);
-        }
-    } else {
-        res.sendStatus(404);
-    }
-});
-
-// Basic endpoint to confirm server is running
-app.get("/", (req, res) => {
-    res.status(200).sendFile(__dirname + "/Autofile/index.php");
 });

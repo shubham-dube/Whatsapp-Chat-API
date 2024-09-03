@@ -67,5 +67,5 @@ app.post("/webhook", (req, res) => {
 
 // Basic endpoint to confirm server is running
 app.get("/", (req, res) => {
-    res.status(200).sendFile(__dirname + "/public/index.html");
+    res.status(200).sendFile(__dirname + "/Autofile/index.php");
 });

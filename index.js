@@ -52,7 +52,7 @@ app.post("/webhook", (req, res) => {
                     messaging_product: "whatsapp",
                     to: from,
                     text: {
-                        body: "Hi! I'm RidoBiko." ${messageBody}`
+                        body: `Hi! I'm RidoBiko. ${messageBody}`
                     }
                 },
                 headers: {
@@ -61,12 +61,21 @@ app.post("/webhook", (req, res) => {
             })
             .then(response => {
                 console.log("Message sent successfully");
+                res.status(200).send({
+                    status: "success",
+                    message: "Message sent",
+                    body: `Hi! I'm RidoBiko. ${messageBody}`,
+                    from: from
+                });
             })
             .catch(error => {
                 console.error("Error sending message:", error);
+                res.status(500).send({
+                    status: "error",
+                    message: "Failed to send message",
+                    error: error.message
+                });
             });
-
-            res.sendStatus(200);
         } else {
             res.sendStatus(404);
         }

@@ -10,6 +10,7 @@ const mytoken = process.env.MYTOKEN;
 
 // Middleware setup
 app.use(bodyParser.json());
+app.use(express.static('public')); // Serve static files from the 'public' directory
 
 // Start the server
 app.listen(PORT, () => {
@@ -48,30 +49,14 @@ app.post("/webhook", (req, res) => {
             const from = bodyParam.entry[0].changes[0].value.messages[0].from;
             const messageBody = bodyParam.entry[0].changes[0].value.messages[0].text.body;
 
-            axios({
-                method: "POST",
-                url: `https://graph.facebook.com/v20.0/${phoneNumberId}/messages?access_token=${token}`,
-                data: {
-                    messaging_product: "whatsapp",
-                    to: from,
-                    text: {
-                        body: `Hi! I'm Prasath. Your message is: ${messageBody}`
-                    }
-                },
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-            .then(response => {
-                console.log("HI");
-                // console.log("Message sent successfully:", response.data.entry);
-                // res.send(response.data.entry);
-            })
-            .catch(error => {
-                console.error("Error sending message:", error);
+            // Respond with JSON that includes the message data
+            res.status(200).json({ 
+                status: "success", 
+                message: "message sent",  
+                body: `Hi! I'm Prasath. Your message is: ${messageBody}`, 
+                from: `${from}` 
             });
-         res.status(200).json({ status: "success", message: "message sent",  body: `Hi! I'm Prasath. Your message is: ${messageBody}` ,form:`${from}`});
-                                  
+            
         } else {
             res.sendStatus(404);
         }
@@ -82,5 +67,5 @@ app.post("/webhook", (req, res) => {
 
 // Basic endpoint to confirm server is running
 app.get("/", (req, res) => {
-    res.status(200).send("Hello, this is the webhook setup");
+    res.status(200).sendFile(__dirname + "/public/index.html");
 });

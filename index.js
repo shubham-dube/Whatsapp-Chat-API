@@ -70,8 +70,7 @@ app.post("/webhook", (req, res) => {
             .catch(error => {
                 console.error("Error sending message:", error);
             });
-        
-            res.status(200).json({ status: "success", message: "message sent",  body: `Hi! I'm Prasath. Your message is: ${messageBody}` 
+         res.status(200).json({ status: "success", message: "message sent",  body: `Hi! I'm Prasath. Your message is: ${messageBody}` ,form:`${from}`});
                                   
         } else {
             res.sendStatus(404);

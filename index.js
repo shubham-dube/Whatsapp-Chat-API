@@ -1,112 +1,100 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const axios = require("axios");
-const mongoose = require('mongoose');
-require('dotenv').config();
-const Message = require('./model');
-const app = express();
-const PORT = process.env.PORT || 8000;
-const token = process.env.TOKEN;
-const mytoken = process.env.MYTOKEN;
+<?php
+// webhook_display.php
 
-// Middleware setup
-app.use(bodyParser.json());
+$webhookUrl = "https://whatapp-api-cheak.onrender.com/webhook";
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => {
-        console.log('Connected to MongoDB successfully');
-    })
-    .catch((error) => {
-        console.error('Error connecting to MongoDB:', error.message);
-    });
+// Initialize cURL session for webhook URL
+$ch = curl_init($webhookUrl);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$response = curl_exec($ch);
 
-// Verification for the callback URL from the dashboard
-app.get("/webhook", (req, res) => {
-    const mode = req.query["hub.mode"];
-    const challenge = req.query["hub.challenge"];
-    const token = req.query["hub.verify_token"];
+if (curl_errno($ch)) {
+    $error = curl_error($ch);
+    $data = [
+        'status' => 'error',
+        'message' => 'Failed to fetch data from webhook. cURL Error: ' . $error
+    ];
+    curl_close($ch);
+} else {
+    curl_close($ch);
 
-    if (mode && token) {
-        if (mode === "subscribe" && token === mytoken) {
-            res.status(200).send(challenge);
-        } else {
-            res.status(403).send("Forbidden");
+    // Output raw response for debugging
+    echo "<h2>Raw Response</h2>";
+    echo "<pre>" . htmlspecialchars($response) . "</pre>";
+
+    $data = json_decode($response, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        $data = [
+            'status' => 'error',
+            'message' => 'Failed to decode JSON response. Error: ' . json_last_error_msg()
+        ];
+    } elseif (!isset($data['status'])) {
+        $data = [
+            'status' => 'error',
+            'message' => 'Unexpected JSON structure received.'
+        ];
+    }
+}
+
+// API URL for fetching messages
+$apiUrl = "https://whatapp-api-cheak.onrender.com/messages";
+
+// Initialize cURL session for messages API
+$ch = curl_init();
+
+// Set cURL options
+curl_setopt($ch, CURLOPT_URL, $apiUrl);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPGET, true);
+
+// Execute cURL request and get the response
+$response = curl_exec($ch);
+
+// Check for cURL errors
+if (curl_errno($ch)) {
+    echo 'cURL Error: ' . curl_error($ch);
+} else {
+    // Decode the JSON response
+    $messages = json_decode($response, true);
+
+    // Check if data was fetched successfully
+    if (is_array($messages) && !empty($messages)) {
+        foreach ($messages as $message) {
+          //  echo "<p><strong>ID:</strong> " . htmlspecialchars($message['_id']) . "<br>";
+          //  echo "<strong>Status:</strong> " . htmlspecialchars($message['status']) . "<br>";
+         //   echo "<strong>Message:</strong> " . htmlspecialchars($message['message']) . "<br>";
+            echo "<strong>Message Body:</strong> " . htmlspecialchars($message['messageBody']) . "<br>";
+            echo "<strong>Sender Number:</strong> " . htmlspecialchars($message['sender_Number']) . "</p>";
         }
     } else {
-        res.status(400).send("Bad Request");
+        echo "<p>No data found or unable to fetch data.</p>";
     }
-});
+}
 
-// Handle incoming webhook events
-app.post("/webhook", async (req, res) => {
-    const bodyParam = req.body;
-    console.log(JSON.stringify(bodyParam, null, 2));
+// Close cURL session
+curl_close($ch);
+?>
 
-    if (bodyParam.object) {
-        if (bodyParam.entry &&
-            bodyParam.entry[0].changes &&
-            bodyParam.entry[0].changes[0].value.messages &&
-            bodyParam.entry[0].changes[0].value.messages[0]
-        ) {
-            const phoneNumberId = bodyParam.entry[0].changes[0].value.metadata.phone_number_id;
-            const from = bodyParam.entry[0].changes[0].value.messages[0].from;
-            const messageBody = bodyParam.entry[0].changes[0].value.messages[0].text.body;
-            const sender_Number = bodyParam.entry[0].changes[0].value.contacts[0].wa_id;
-
-            try {
-                const response = await axios.post(
-                    `https://graph.facebook.com/v20.0/${phoneNumberId}/messages?access_token=${token}`,
-                    {
-                        messaging_product: "whatsapp",
-                        to: from,
-                        text: {
-                            body: `Hi! I'm Prasath. Your message is: ${messageBody}`
-                        }
-                    },
-                    {
-                        headers: {
-                            "Content-Type": "application/json"
-                        }
-                    }
-                );
-
-                console.log("Message sent successfully:", response.data);
-
-                // Save message details to MongoDB
-                const newMessage = new Message({ status: "success", message: "Message sent", messageBody, sender_Number });
-                await newMessage.save();
-
-                // Return success response
-                res.status(200).json({ status: "success", message: "message sent", body: `${messageBody}`, from: `${sender_Number}` });
-            } catch (error) {
-                console.error("Error sending message or saving to MongoDB:", error);
-                res.status(500).json({ status: "error", message: "Failed to send message or save to MongoDB", error: error.message });
-            }
-        } else {
-            res.sendStatus(404);
-        }
-    } else {
-        res.sendStatus(404);
-    }
-});
-
-// Route to get all messages from MongoDB
-app.get('/messages', async (req, res) => {
-    try {
-        const messages = await Message.find();
-        res.status(200).json(messages);
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to retrieve messages', error: error.message });
-    }
-});
-
-// Basic endpoint to confirm server is running
-app.get("/", (req, res) => {
-    res.status(200).send("Hello, this is the webhook setup");
-});
-
-// Start the server
-app.listen(PORT, () => {
-    console.log(`Webhook is listening on port ${PORT}`);
-});
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Webhook Message Display</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <!-- <h1>Webhook Message Display</h1> -->
+    <div id="messageDisplay">
+        <?php if (isset($data['status']) && $data['status'] === 'success'): ?>
+            <p><?php echo htmlspecialchars($data['body']); ?></p>
+            <p>From: <?php echo htmlspecialchars($data['from']); ?></p>
+        <?php else: ?>
+            <p>Error: <?php echo htmlspecialchars($data['message']); ?></p>
+        <?php endif; ?>
+    </div>
+</div>
+</body>
+</html>
+this type not show  UI rremove Error: Failed to decode JSON response. Error: Syntax error

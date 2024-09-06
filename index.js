@@ -8,12 +8,12 @@ const PORT = process.env.PORT || 8000;
 const token = process.env.TOKEN;
 const mytoken = process.env.MYTOKEN;
 const http = require('http');
-const socketIo = require('socket.io');
+
 require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+
 
 // Middleware setup
 app.use(bodyParser.json());
@@ -67,14 +67,7 @@ app.post("/webhook",async (req, res) => {
             const sender_Number=bodyParam.entry[0].changes[0].value.contacts[0].wa_id;
             
 
-//             console.log("Sending message with the following data:");
-// console.log({
-//     messaging_product: "whatsapp",
-//     to: from,
-//     text: {
-//         body: `Hi! I'm Prasath. Your message is: ${messageBody}`
-//     }
-// });
+
 
 axios({
     method: "POST",
@@ -142,29 +135,6 @@ app.get('/latest_messages', async (req, res) => {
         res.status(500).json({ message: 'Error fetching entries' });
     }
 });
-
-// WebSocket connection to listen for updates
-io.on('connection', (socket) => {
-    console.log('New client connected');
-
-    // Watch MongoDB collection for new entries
-    const changeStream = Entry.watch();
-    changeStream.on('change', async (change) => {
-        if (change.operationType === 'insert') {
-            const latestEntries = await Entry.find().sort({ createdAt: -1 }).limit(10);
-            io.emit('updateEntries', latestEntries);
-        }
-    });
-
-    socket.on('disconnect', () => {
-        console.log('Client disconnected');
-    });
-});
-
-
-
-
-
 
 
 // Basic endpoint to confirm server is running

@@ -1,95 +1,86 @@
-<?php
-// webhook_display.php
+const express = require("express");
+const bodyParser = require("body-parser");
+const axios = require("axios");
+require('dotenv').config();
 
-$webhookUrl = "https://whatapp-api-cheak.onrender.com/webhook";
+const app = express();
+const PORT = process.env.PORT || 8000;
+const token = process.env.TOKEN;
+const mytoken = process.env.MYTOKEN;
 
-// Initialize cURL session for webhook URL
-$ch = curl_init($webhookUrl);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$response = curl_exec($ch);
+// Middleware setup
+app.use(bodyParser.json());
 
-if (curl_errno($ch)) {
-    $error = curl_error($ch);
-    $data = [
-        'status' => 'error',
-        'message' => 'Failed to fetch data from webhook. cURL Error: ' . $error
-    ];
-    curl_close($ch);
-} else {
-    curl_close($ch);
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Webhook is listening on port ${PORT}`);
+});
 
-    // Output raw response for debugging
-    echo "<h2>Raw Response</h2>";
-    echo "<pre>" . htmlspecialchars($response) . "</pre>";
+// Verification for the callback URL from the dashboard
+app.get("/webhook", (req, res) => {
+    const mode = req.query["hub.mode"];
+    const challenge = req.query["hub.challenge"];
+    const token = req.query["hub.verify_token"];
 
-    $data = json_decode($response, true);
-
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        $data = [
-            'status' => 'error',
-            'message' => 'Failed to decode JSON response. Error: ' . json_last_error_msg()
-        ];
-    } elseif (!isset($data['status'])) {
-        $data = [
-            'status' => 'error',
-            'message' => 'Unexpected JSON structure received.'
-        ];
-    }
-}
-
-// API URL for fetching messages
-$apiUrl = "https://whatapp-api-cheak.onrender.com/messages";
-
-// Initialize cURL session for messages API
-$ch = curl_init($apiUrl);
-
-// Set cURL options
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_HTTPGET, true);
-
-// Execute cURL request and get the response
-$response = curl_exec($ch);
-
-// Check for cURL errors
-if (curl_errno($ch)) {
-    echo 'cURL Error: ' . curl_error($ch);
-} else {
-    // Decode the JSON response
-    $messages = json_decode($response, true);
-
-    // Check if data was fetched successfully
-    if (is_array($messages) && !empty($messages)) {
-        foreach ($messages as $message) {
-            echo "<p><strong>Message Body:</strong> " . htmlspecialchars($message['messageBody']) . "<br>";
-            echo "<strong>Sender Number:</strong> " . htmlspecialchars($message['sender_Number']) . "</p>";
+    if (mode && token) {
+        if (mode === "subscribe" && token === mytoken) {
+            res.status(200).send(challenge);
+        } else {
+            res.status(403).send("Forbidden");
         }
     } else {
-        echo "<p>No data found or unable to fetch data.</p>";
+        res.status(400).send("Bad Request");
     }
-}
+});
 
-// Close cURL session
-curl_close($ch);
-?>
+// Handle incoming webhook events
+app.post("/webhook", (req, res) => {
+    const bodyParam = req.body;
+    console.log(JSON.stringify(bodyParam, null, 2));
+    
+    if (bodyParam.object) {
+        if (bodyParam.entry &&
+            bodyParam.entry[0].changes &&
+            bodyParam.entry[0].changes[0].value.messages &&
+            bodyParam.entry[0].changes[0].value.messages[0]
+        ) {
+            const phoneNumberId = bodyParam.entry[0].changes[0].value.metadata.phone_number_id;
+            const from = bodyParam.entry[0].changes[0].value.messages[0].from;
+            const messageBody = bodyParam.entry[0].changes[0].value.messages[0].text.body;
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webhook Message Display</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-</head>
-<body>
-<div class="container">
-    <div id="messageDisplay">
-        <?php if (isset($data['status']) && $data['status'] === 'success'): ?>
-            <p><?php echo htmlspecialchars($data['body']); ?></p>
-            <p>From: <?php echo htmlspecialchars($data['from']); ?></p>
-        <?php else: ?>
-            <p>Error: <?php echo htmlspecialchars($data['message']); ?></p>
-        <?php endif; ?>
-    </div>
-</div>
-</body>
-</html>
+            axios({
+                method: "POST",
+                url: `https://graph.facebook.com/v20.0/${phoneNumberId}/messages?access_token=${token}`,
+                data: {
+                    messaging_product: "whatsapp",
+                    to: from,
+                    text: {
+                        body: `Hi! I'm Prasath. Your message is: ${messageBody}`
+                    }
+                },
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => {
+                console.log("HI");
+                // console.log("Message sent successfully:", response.data.entry);
+                // res.send(response.data.entry);
+            })
+            .catch(error => {
+                console.error("Error sending message:", error);
+            });
+        
+            res.sendStatus(200);
+        } else {
+            res.sendStatus(404);
+        }
+    } else {
+        res.sendStatus(404);
+    }
+});
+
+// Basic endpoint to confirm server is running
+app.get("/", (req, res) => {
+    res.status(200).send("Hello, this is the webhook setup");
+});

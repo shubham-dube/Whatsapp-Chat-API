@@ -1,86 +1,78 @@
 const express = require("express");
-const bodyParser = require("body-parser");
+const body_parser = require("body-parser");
 const axios = require("axios");
 require('dotenv').config();
 
-const app = express();
-const PORT = process.env.PORT || 8000;
+const app = express().use(body_parser.json());
+
 const token = process.env.TOKEN;
-const mytoken = process.env.MYTOKEN;
+const mytoken = process.env.MYTOKEN; // prasath_token
 
-// Middleware setup
-app.use(bodyParser.json());
-
-// Start the server
-app.listen(PORT, () => {
-    console.log(`Webhook is listening on port ${PORT}`);
+app.listen(process.env.PORT, () => {
+    console.log("Webhook is listening");
 });
 
-// Verification for the callback URL from the dashboard
+// To verify the callback URL from the dashboard side - Cloud API side
 app.get("/webhook", (req, res) => {
-    const mode = req.query["hub.mode"];
-    const challenge = req.query["hub.challenge"];
-    const token = req.query["hub.verify_token"];
+    let mode = req.query["hub.mode"];
+    let challenge = req.query["hub.challenge"];
+    let token = req.query["hub.verify_token"];
 
     if (mode && token) {
         if (mode === "subscribe" && token === mytoken) {
             res.status(200).send(challenge);
         } else {
-            res.status(403).send("Forbidden");
+            res.sendStatus(403);
         }
-    } else {
-        res.status(400).send("Bad Request");
     }
 });
 
-// Handle incoming webhook events
 app.post("/webhook", (req, res) => {
-    const bodyParam = req.body;
-    console.log(JSON.stringify(bodyParam, null, 2));
-    
-    if (bodyParam.object) {
-        if (bodyParam.entry &&
-            bodyParam.entry[0].changes &&
-            bodyParam.entry[0].changes[0].value.messages &&
-            bodyParam.entry[0].changes[0].value.messages[0]
+    let body_param = req.body;
+
+    console.log(JSON.stringify(body_param, null, 2));
+
+    if (body_param.object) {
+        console.log("Inside body param");
+        if (body_param.entry &&
+            body_param.entry[0].changes &&
+            body_param.entry[0].changes[0].value.messages &&
+            body_param.entry[0].changes[0].value.messages[0]
         ) {
-            const phoneNumberId = bodyParam.entry[0].changes[0].value.metadata.phone_number_id;
-            const from = bodyParam.entry[0].changes[0].value.messages[0].from;
-            const messageBody = bodyParam.entry[0].changes[0].value.messages[0].text.body;
+            let phon_no_id = body_param.entry[0].changes[0].value.metadata.phone_number_id;
+            let from = body_param.entry[0].changes[0].value.messages[0].from;
+            let msg_body = body_param.entry[0].changes[0].value.messages[0].text.body;
+
+            console.log("Phone number ID: " + phon_no_id);
+            console.log("From: " + from);
+            console.log("Message body: " + msg_body);
 
             axios({
                 method: "POST",
-                url: `https://graph.facebook.com/v20.0/430568443461658/messages${phoneNumberId}/messages?access_token=${token}`,
+                url: `https://graph.facebook.com/v13.0/${phon_no_id}/messages?access_token=${token}`,
                 data: {
                     messaging_product: "whatsapp",
                     to: from,
                     text: {
-                        body: `Hi! I'm Prasath. Your message is: ${messageBody}`
+                        body: `Hi! I'm Ridobiko. Your message is: ${msg_body}`
                     }
                 },
                 headers: {
                     "Content-Type": "application/json"
                 }
-            })
-            .then(response => {
-                console.log("HI");
-                // console.log("Message sent successfully:", response.data.entry);
-                // res.send(response.data.entry);
-            })
-            .catch(error => {
-                console.error("Error sending message:", error);
+            }).then(response => {
+                console.log("Message sent successfully");
+                res.sendStatus(200);
+            }).catch(error => {
+                console.error("Error sending message: ", error.response ? error.response.data : error.message);
+                res.sendStatus(500); // Server error
             });
-        
-            res.sendStatus(200);
         } else {
-            res.sendStatus(404);
+            res.sendStatus(404); // Message not found
         }
-    } else {
-        res.sendStatus(404);
     }
 });
 
-// Basic endpoint to confirm server is running
 app.get("/", (req, res) => {
     res.status(200).send("Hello, this is the webhook setup");
 });

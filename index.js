@@ -41,10 +41,9 @@ if (curl_errno($ch)) {
 $apiUrl = "https://whatapp-api-cheak.onrender.com/messages";
 
 // Initialize cURL session for messages API
-$ch = curl_init();
+$ch = curl_init($apiUrl);
 
 // Set cURL options
-curl_setopt($ch, CURLOPT_URL, $apiUrl);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HTTPGET, true);
 
@@ -61,10 +60,7 @@ if (curl_errno($ch)) {
     // Check if data was fetched successfully
     if (is_array($messages) && !empty($messages)) {
         foreach ($messages as $message) {
-          //  echo "<p><strong>ID:</strong> " . htmlspecialchars($message['_id']) . "<br>";
-          //  echo "<strong>Status:</strong> " . htmlspecialchars($message['status']) . "<br>";
-         //   echo "<strong>Message:</strong> " . htmlspecialchars($message['message']) . "<br>";
-            echo "<strong>Message Body:</strong> " . htmlspecialchars($message['messageBody']) . "<br>";
+            echo "<p><strong>Message Body:</strong> " . htmlspecialchars($message['messageBody']) . "<br>";
             echo "<strong>Sender Number:</strong> " . htmlspecialchars($message['sender_Number']) . "</p>";
         }
     } else {
@@ -80,12 +76,12 @@ curl_close($ch);
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Webhook Message Display</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
 <div class="container">
-    <!-- <h1>Webhook Message Display</h1> -->
     <div id="messageDisplay">
         <?php if (isset($data['status']) && $data['status'] === 'success'): ?>
             <p><?php echo htmlspecialchars($data['body']); ?></p>
@@ -97,4 +93,3 @@ curl_close($ch);
 </div>
 </body>
 </html>
-

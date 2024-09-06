@@ -97,4 +97,4 @@ curl_close($ch);
 </div>
 </body>
 </html>
-this type not show  UI rremove Error: Failed to decode JSON response. Error: Syntax error
+

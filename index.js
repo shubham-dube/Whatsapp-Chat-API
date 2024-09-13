@@ -95,17 +95,28 @@ axios({
             const message="Message sent"
             try {
                 // const { status, message, body, form } = req.body;
-        
-                const newMessage = new Message({ status, message, messageBody, sender_Number });
-                await newMessage.save();
+                // const newMessage = new Message({ status, message, messageBody, sender_Number });
+                // await newMessage.save();
+
+                const postData = {
+                    mobile_number: sender_Number,
+                    message: messageBody,
+                    sender: 'user'
+                  };
+                  
+                  axios.post('http://localhost/whatsapp-apis/chat_api/store_message.php', postData)
+                    .then(response => {
+                      console.log(`Response: ${response.data}`);
+                    })
+                    .catch(error => {
+                      console.error(`Error: ${error}`);
+                    });
         
                 // res.status(201).json({ message: 'Message stored successfully', data: newMessage });
                 res.status(200).json({ status: "success", message: "message sent",  body: ` ${messageBody}` ,form:`${sender_Number}`});
             } catch (error) {
                 res.status(500).json({ message: 'Failed to store message', error });
             }
-
-
             
             // res.sendStatus(200);
         } else {
@@ -119,6 +130,7 @@ axios({
 app.get('/messages', async (req, res) => {
     try {
         const messages = await Message.find();
+        console.log(messages);
         res.status(200).json(messages);
     } catch (error) {
         res.status(500).json({ message: 'Failed to retrieve messages', error });

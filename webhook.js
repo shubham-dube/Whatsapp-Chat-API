@@ -6,6 +6,7 @@ const Graph_API_Token = process.env.GRAPH_API_TOKEN;
 const Webhook_Verify_Token = process.env.WEBHOOK_VERIFY_TOKEN;
 
 exports.WEBHOOK_CALLBACK = (req, res) => {
+    console.log(req.url);
     const webhook_verify_token = req.query["hub.verify_token"];
 
     if (webhook_verify_token) {

@@ -7,11 +7,12 @@ const Webhook_Verify_Token = process.env.WEBHOOK_VERIFY_TOKEN;
 
 exports.WEBHOOK_CALLBACK = (req, res) => {
     console.log(req.url);
-    const webhook_verify_token = req.query["hub.verify_token"];
+    const challenge = req.query["hub_challenge"];
+    const webhook_verify_token = req.query["hub_verify_token"];
 
     if (webhook_verify_token) {
         if (webhook_verify_token === Webhook_Verify_Token) {
-            res.status(200).json({"status": true});
+            res.status(200).send(challenge);
         } else {
             res.status(403).send("Forbidden");
         }

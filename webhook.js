@@ -4,22 +4,21 @@ require('dotenv').config();
 const PORT = process.env.PORT || 8000;
 const Graph_API_Token = process.env.GRAPH_API_TOKEN;
 const Webhook_Verify_Token = process.env.WEBHOOK_VERIFY_TOKEN;
+const VERIFY_TOKEN = "ridobiko123";
 
 exports.WEBHOOK_CALLBACK = (req, res) => {
-    console.log(req.url);
-    const challenge = req.query["hub_challenge"];
-    const webhook_verify_token = req.query["hub_verify_token"];
-
-    if (webhook_verify_token) {
-        if (webhook_verify_token === Webhook_Verify_Token) {
-            res.status(200).send(challenge);
-        } else {
-            res.status(403).send("Forbidden");
-        }
+    const mode = req.query['hub.mode'];
+    const token = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
+  
+    // Check if the mode and token are correct
+    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+      console.log('Webhook Verified Successfully');
+      res.status(200).send(challenge);
     } else {
-        res.status(400).send("Bad Request");
+      res.sendStatus(403);
     }
-}
+  }
 
 exports.WEBHOOK_EVENT_HANDLER = async (req, res) => {
 

@@ -65,7 +65,7 @@ exports.WEBHOOK_EVENT_HANDLER = async (req, res) => {
                   };
                   console.log(postData);
                   
-                  axios.post('https://3t8pxnx6-80.inc1.devtunnels.ms/whatsapp-apis/chat_api/store_message.php', postData)
+                  axios.post('https://twowheelerrental.in/whatsapp/chat_api/store_message.php', postData)
                     .then(response => {
                       console.log(`Response: ${response.data}`);
                     })

@@ -21,6 +21,7 @@ exports.WEBHOOK_CALLBACK = (req, res) => {
 exports.WEBHOOK_EVENT_HANDLER = async (req, res) => {
 
     const bodyParam = req.body;
+    console.log("body parameters : " + bodyParam);
     console.log(JSON.stringify(bodyParam, null, 2));
     
     if (bodyParam.object) {

@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const webhook = require('./webhook')
+const axios = require("axios");
 const app = express();
 require('dotenv').config();
 const helmet = require('helmet');
@@ -10,9 +11,7 @@ app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const PORT = process.env.PORT || 8000;
-const token = process.env.TOKEN;
-const authKey = process.env.AUTHKEY;
+const PORT = 8000;
 
 app.listen(PORT, () => {
     console.log(`Webhook Server is listening on port ${PORT}`);

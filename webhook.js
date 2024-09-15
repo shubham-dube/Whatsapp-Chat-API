@@ -1,7 +1,6 @@
 const axios = require("axios");
 require('dotenv').config();
 
-const PORT = process.env.PORT || 8000;
 const Graph_API_Token = process.env.GRAPH_API_TOKEN;
 const Webhook_Verify_Token = process.env.WEBHOOK_VERIFY_TOKEN;
 

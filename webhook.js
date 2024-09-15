@@ -1,4 +1,5 @@
 const axios = require("axios");
+const { json } = require("body-parser");
 require('dotenv').config();
 
 const Graph_API_Token = process.env.GRAPH_API_TOKEN;
@@ -21,6 +22,7 @@ exports.WEBHOOK_CALLBACK = (req, res) => {
 exports.WEBHOOK_EVENT_HANDLER = async (req, res) => {
 
     const messageObject = req.body;
+    console.log("messageObject: " + json.toString(messageObject))
 
     if (messageObject.object) {
         if (messageObject.entry && messageObject.entry[0].changes && messageObject.entry[0].changes[0].value.messages &&
@@ -53,6 +55,7 @@ exports.WEBHOOK_EVENT_HANDLER = async (req, res) => {
                 console.error("Error sending message:", error);
                 res.status(500).json({ status: "error", message: "Failed to send messagesss" });
             });
+            console.log("outside");
 
             try {
                 const postData = {
@@ -60,6 +63,7 @@ exports.WEBHOOK_EVENT_HANDLER = async (req, res) => {
                     message: messageBody,
                     sender: 'user'
                   };
+                  console.log(postData);
                   
                   axios.post('https://3t8pxnx6-80.inc1.devtunnels.ms/whatsapp-apis/chat_api/store_message.php', postData)
                     .then(response => {

@@ -31,22 +31,46 @@ exports.WEBHOOK_EVENT_HANDLER = async (req, res) => {
             const messageBody = messageObject.entry[0].changes[0].value.messages[0].text.body;
             const sender_Number=messageObject.entry[0].changes[0].value.contacts[0].wa_id;
 
+            axios({
+                method: "POST",
+                url: `https://graph.facebook.com/v20.0/${phoneNumberId}/messages?access_token=${Graph_API_Token}`,
+                data: {
+                    messaging_product: "whatsapp",
+                    to: from,
+                    text: {
+                        body: `Your Message is ${messageBody}`
+                    }
+                },
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => {
+                console.log("Message sent successfully:", response.data);
+                res.status(200).json({ status: "success", data: response.data });
+            })
+            .catch(error => {
+                console.error("Error sending message:", error);
+                res.status(500).json({ status: "error", message: "Failed to send messagesss" });
+            });
+
             try {
                 const postData = {
                     mobile_number: sender_Number,
                     message: messageBody,
                     sender: 'user'
-                };
+                  };
                   
                   axios.post('https://3t8pxnx6-80.inc1.devtunnels.ms/whatsapp-apis/chat_api/store_message.php', postData)
                     .then(response => {
                       console.log(`Response: ${response.data}`);
-                      res.status(201).json({ message: 'Message stored successfully', data: newMessage });
                     })
                     .catch(error => {
                       console.error(`Error: ${error}`);
                     });
         
+                // res.status(201).json({ message: 'Message stored successfully', data: newMessage });
+                res.status(200).json({ status: "success", message: "message sent",  body: ` ${messageBody}` ,form:`${sender_Number}`});
             } catch (error) {
                 res.status(500).json({ message: 'Failed to store message', error });
             }

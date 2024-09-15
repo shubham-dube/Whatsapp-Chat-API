@@ -3,6 +3,9 @@ const bodyParser = require("body-parser");
 const webhook = require('./webhook')
 const app = express();
 require('dotenv').config();
+const helmet = require('helmet');
+app.use(helmet());
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

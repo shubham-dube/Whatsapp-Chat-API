@@ -4,7 +4,6 @@ require('dotenv').config();
 const PORT = process.env.PORT || 8000;
 const Graph_API_Token = process.env.GRAPH_API_TOKEN;
 const Webhook_Verify_Token = process.env.WEBHOOK_VERIFY_TOKEN;
-const VERIFY_TOKEN = "ridobiko123";
 
 exports.WEBHOOK_CALLBACK = (req, res) => {
     const mode = req.query['hub.mode'];
@@ -12,7 +11,7 @@ exports.WEBHOOK_CALLBACK = (req, res) => {
     const challenge = req.query['hub.challenge'];
   
     // Check if the mode and token are correct
-    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+    if (mode === 'subscribe' && token === Webhook_Verify_Token) {
       console.log('Webhook Verified Successfully');
       res.status(200).send(challenge);
     } else {

@@ -22,7 +22,6 @@ exports.WEBHOOK_CALLBACK = (req, res) => {
 exports.WEBHOOK_EVENT_HANDLER = async (req, res) => {
 
     const messageObject = req.body;
-    console.log("messageObject: " + json.toString(messageObject))
 
     if (messageObject.object) {
         if (messageObject.entry && messageObject.entry[0].changes && messageObject.entry[0].changes[0].value.messages &&

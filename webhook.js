@@ -23,11 +23,9 @@ exports.WEBHOOK_EVENT_HANDLER = async (req, res) => {
     const bodyParam = req.body;
     console.log("body parameters : " + bodyParam);
     console.log(JSON.stringify(bodyParam, null, 2));
-    
+
     if (bodyParam.object) {
-        if (bodyParam.entry &&
-            bodyParam.entry[0].changes &&
-            bodyParam.entry[0].changes[0].value.messages &&
+        if (bodyParam.entry && bodyParam.entry[0].changes && bodyParam.entry[0].changes[0].value.messages &&
             bodyParam.entry[0].changes[0].value.messages[0]) {
 
             const phoneNumberId = bodyParam.entry[0].changes[0].value.metadata.phone_number_id;
@@ -35,28 +33,28 @@ exports.WEBHOOK_EVENT_HANDLER = async (req, res) => {
             const messageBody = bodyParam.entry[0].changes[0].value.messages[0].text.body;
             const sender_Number=bodyParam.entry[0].changes[0].value.contacts[0].wa_id;
 
-axios({
-    method: "POST",
-    url: `https://graph.facebook.com/v20.0/${phoneNumberId}/messages?access_token=${token}`,
-    data: {
-        messaging_product: "whatsapp",
-                    to: from,
-                    text: {
-                        body: `Hi! I'm Prasath. Your message is: ${messageBody}`
-                    }
-                },
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-            .then(response => {
-                console.log("Message sent successfully:", response.data);
-                res.status(200).json({ status: "success", data: response.data });
-            })
-            .catch(error => {
-                console.error("Error sending message:", error);
-                res.status(500).json({ status: "error", message: "Failed to send messagesss" });
-            });
+            axios({
+                method: "POST",
+                url: `https://graph.facebook.com/v20.0/${phoneNumberId}/messages?access_token=${Graph_API_Token}`,
+                data: {
+                    messaging_product: "whatsapp",
+                                to: from,
+                                text: {
+                                    body: `Hi! I'm Prasath. Your message is: ${messageBody}`
+                                }
+                            },
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                        })
+                        .then(response => {
+                            console.log("Message sent successfully:", response.data);
+                            res.status(200).json({ status: "success", data: response.data });
+                        })
+                        .catch(error => {
+                            console.error("Error sending message:", error);
+                            res.status(500).json({ status: "error", message: "Failed to send messagesss" });
+                        });
             const status="success"
             const message="Message sent"
             try {

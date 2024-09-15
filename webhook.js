@@ -20,64 +20,33 @@ exports.WEBHOOK_CALLBACK = (req, res) => {
 
 exports.WEBHOOK_EVENT_HANDLER = async (req, res) => {
 
-    const bodyParam = req.body;
-    console.log("body parameters : " + bodyParam);
-    console.log(JSON.stringify(bodyParam, null, 2));
+    const messageObject = req.body;
 
-    if (bodyParam.object) {
-        if (bodyParam.entry && bodyParam.entry[0].changes && bodyParam.entry[0].changes[0].value.messages &&
-            bodyParam.entry[0].changes[0].value.messages[0]) {
+    if (messageObject.object) {
+        if (messageObject.entry && messageObject.entry[0].changes && messageObject.entry[0].changes[0].value.messages &&
+            messageObject.entry[0].changes[0].value.messages[0]) {
 
-            const phoneNumberId = bodyParam.entry[0].changes[0].value.metadata.phone_number_id;
-            const from = bodyParam.entry[0].changes[0].value.messages[0].from;
-            const messageBody = bodyParam.entry[0].changes[0].value.messages[0].text.body;
-            const sender_Number=bodyParam.entry[0].changes[0].value.contacts[0].wa_id;
+            const phoneNumberId = messageObject.entry[0].changes[0].value.metadata.phone_number_id;
+            const from = messageObject.entry[0].changes[0].value.messages[0].from;
+            const messageBody = messageObject.entry[0].changes[0].value.messages[0].text.body;
+            const sender_Number=messageObject.entry[0].changes[0].value.contacts[0].wa_id;
 
-            axios({
-                method: "POST",
-                url: `https://graph.facebook.com/v20.0/${phoneNumberId}/messages?access_token=${Graph_API_Token}`,
-                data: {
-                    messaging_product: "whatsapp",
-                                to: from,
-                                text: {
-                                    body: `Hi! I'm Prasath. Your message is: ${messageBody}`
-                                }
-                            },
-                            headers: {
-                                "Content-Type": "application/json"
-                            }
-                        })
-                        .then(response => {
-                            console.log("Message sent successfully:", response.data);
-                            res.status(200).json({ status: "success", data: response.data });
-                        })
-                        .catch(error => {
-                            console.error("Error sending message:", error);
-                            res.status(500).json({ status: "error", message: "Failed to send messagesss" });
-                        });
-            const status="success"
-            const message="Message sent"
             try {
-                // const { status, message, body, form } = req.body;
-                // const newMessage = new Message({ status, message, messageBody, sender_Number });
-                // await newMessage.save();
-
                 const postData = {
                     mobile_number: sender_Number,
                     message: messageBody,
                     sender: 'user'
-                  };
+                };
                   
-                  axios.post('http://localhost/whatsapp-apis/chat_api/store_message.php', postData)
+                  axios.post('https://3t8pxnx6-80.inc1.devtunnels.ms/whatsapp-apis/chat_api/store_message.php', postData)
                     .then(response => {
                       console.log(`Response: ${response.data}`);
+                      res.status(201).json({ message: 'Message stored successfully', data: newMessage });
                     })
                     .catch(error => {
                       console.error(`Error: ${error}`);
                     });
         
-                // res.status(201).json({ message: 'Message stored successfully', data: newMessage });
-                res.status(200).json({ status: "success", message: "message sent",  body: ` ${messageBody}` ,form:`${sender_Number}`});
             } catch (error) {
                 res.status(500).json({ message: 'Failed to store message', error });
             }
@@ -88,5 +57,35 @@ exports.WEBHOOK_EVENT_HANDLER = async (req, res) => {
         }
     } else {
         res.sendStatus(404);
+    }
+}
+
+exports.SEND_MESSAGE = async (req, res) => {
+    const { phoneNumberId, recipientPhoneNumber, messageBody } = req.body;
+    
+    if (!phoneNumberId || !recipientPhoneNumber || !messageBody) {
+        return res.status(400).json({ status: "error", message: "Missing required parameters" });
+    }
+
+    try {
+        const response = await axios({
+            method: "POST",
+            url: `https://graph.facebook.com/v20.0/${phoneNumberId}/messages?access_token=${Graph_API_Token}`,
+            data: {
+                messaging_product: "whatsapp",
+                to: recipientPhoneNumber,
+                text: {
+                    body: messageBody
+                }
+            },
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        res.status(200).json({ status: "success", data: response.data });
+    } catch (error) {
+        console.error("Error sending message:", error.response?.data || error.message);
+        res.status(500).json({ status: "error", message: "Failed to send message", error: error.response?.data || error.message });
     }
 }

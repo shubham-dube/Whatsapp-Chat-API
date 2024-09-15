@@ -48,35 +48,35 @@ exports.WEBHOOK_EVENT_HANDLER = async (req, res) => {
             })
             .then(response => {
                 console.log("Message sent successfully:", response.data);
+                try {
+                    const postData = {
+                        mobile_number: sender_Number,
+                        message: messageBody,
+                        sender: 'user'
+                      };
+                      console.log(postData);
+                      
+                      axios.post('https://twowheelerrental.in/whatsapp/chat_api/store_message.php', postData)
+                        .then(response => {
+                          console.log(`Response: ${response.data}`);
+                        })
+                        .catch(error => {
+                          console.error(`Error: ${error}`);
+                        });
+            
+                    // res.status(201).json({ message: 'Message stored successfully', data: newMessage });
+                    // res.status(200).json({ status: "success", message: "message sent",  body: ` ${messageBody}` ,form:`${sender_Number}`});
+                } catch (error) {
+                    // res.status(500).json({ message: 'Failed to store message', error });
+                }
+
                 res.status(200).json({ status: "success", data: response.data });
             })
             .catch(error => {
                 console.error("Error sending message:", error);
                 res.status(500).json({ status: "error", message: "Failed to send messagesss" });
             });
-            console.log("outside");
-
-            try {
-                const postData = {
-                    mobile_number: sender_Number,
-                    message: messageBody,
-                    sender: 'user'
-                  };
-                  console.log(postData);
-                  
-                  axios.post('https://twowheelerrental.in/whatsapp/chat_api/store_message.php', postData)
-                    .then(response => {
-                      console.log(`Response: ${response.data}`);
-                    })
-                    .catch(error => {
-                      console.error(`Error: ${error}`);
-                    });
-        
-                // res.status(201).json({ message: 'Message stored successfully', data: newMessage });
-                res.status(200).json({ status: "success", message: "message sent",  body: ` ${messageBody}` ,form:`${sender_Number}`});
-            } catch (error) {
-                res.status(500).json({ message: 'Failed to store message', error });
-            }
+            console.log("outside")
             
             // res.sendStatus(200);
         } else {

@@ -101,16 +101,20 @@ function saveUserMessage(messageBody, sender_Number){
             mobile_number: sender_Number,
             message: messageBody,
             sender: 'user'
-          };
-          console.log(postData);
-          
-          axios.post('https://twowheelerrental.in/whatsapp/chat_api/store_message.php', postData)
-            .then(response => {
-              console.log(`Response: ${response.data}`);
-            })
-            .catch(error => {
-              console.error(`Error: ${error}`);
-            });
+        };
+        console.log(postData);
+
+        axios.post('https://twowheelerrental.in/whatsapp/chat_api/store_message.php', postData, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+        .then(response => {
+            console.log(`Response: ${response.data}`);
+        })
+        .catch(error => {
+            console.error(`Error: ${error}`);
+        });
     } catch (error) {
         console.log(error)
     }
